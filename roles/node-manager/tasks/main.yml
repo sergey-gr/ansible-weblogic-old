@@ -1,0 +1,48 @@
+# ==> Create directory for node managers
+- name: Create directoy for node managers
+  file: state=directory path={{ nm_home }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create node manager home directory
+- name: Create node manager home
+  file: state=directory path={{ nm_home }}/{{ inventory_hostname }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Copy nodemanager.properties file
+- name: Copy 'nodemanager.properties' file
+  template: src=nodemanager.properties dest={{ nm_home }}/{{ inventory_hostname }}/ owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Copy create scripts
+- name: Copy node manager creation script
+  template: src=create-nm.py dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Copy setup scripts
+- name: Copy node manager setup script
+  template: src=create-nm.sh dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }} mode=0755
+
+# ==> Execute node manager script
+- name: Execute node manager creation script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ wls_bin }}/wlst.sh {{ tmp_dir }}/create-nm.py"
+  throttle: 1
+
+# ==> Execute node manager script
+- name: Execute node manager setup script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ tmp_dir }}/create-nm.sh"
+
+# ==> Create firewall rule for Node Mnager
+- name: Create firewall rule for node manager
+  firewalld: zone=public port='{{ nm_listen_port }}/tcp' permanent=yes immediate=yes state=enabled
+
+# ==> Create node manager service
+- name: Create node manager systemd service
+  template: src=nodemanager.service dest=/etc/systemd/system/ owner=root group=root mode=0644
+
+# ==> Start node manager
+- name: Start node manager service
+  systemd: name=nodemanager state=started enabled=yes
+
+# ==> Wait to start
+- name: Wait for node manager to start
+  wait_for: port={{ nm_listen_port }} host={{ ansible_ssh_host }} delay=2 timeout=120

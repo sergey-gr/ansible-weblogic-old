@@ -1,0 +1,33 @@
+- name: Preparing servers for WebLogic
+  hosts: cluster
+  become: yes
+  vars_files:
+    - group_vars/infra.yml
+    - group_vars/paths.yml
+  roles:
+    - role: wls-prep
+    - role: jdk
+
+- name: Installing WebLogic and creating a domain
+  hosts: wl_admin
+  become: yes
+  vars_files:
+    - group_vars/infra.yml
+    - group_vars/paths.yml
+    - group_vars/secrets.yml
+  roles:
+    - role: fmw
+    - role: domain
+    - role: cluster
+      when: ms_cluster is sameas true
+
+- name: Creating Node Manager and Managed Server
+  hosts: wl_node
+  become: yes
+  vars_files:
+    - group_vars/infra.yml
+    - group_vars/paths.yml
+    - group_vars/secrets.yml
+  roles:
+    - role: node-manager
+    - role: managed

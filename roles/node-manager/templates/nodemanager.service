@@ -1,0 +1,17 @@
+[Unit]
+Description=Controls Node Manager Lifecycle
+After=network.target sshd.service
+
+[Service]
+User={{ oracle_user }}
+Group={{ oracle_group }}
+WorkingDirectory={{ nm_home }}/{{ inventory_hostname }}
+ExecStart=/bin/bash {{ nm_home }}/{{ inventory_hostname }}/startNodeManager.sh
+ExecStop=/bin/bash {{ nm_home }}/{{ inventory_hostname }}/stopNodeManager.sh
+Type=simple
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

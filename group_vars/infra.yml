@@ -1,0 +1,57 @@
+# Oracle OS user and group
+oracle_user: 'oracle'
+oracle_user_id: 1100
+oracle_group: 'oinstall'
+oracle_group_id: 1100
+
+# Software and configuration main directory
+oracle_base: '/u01/oracle'
+
+# JDK installer
+jdk_installer_archive: 'jdk-8u271-linux-x64.tar.gz'
+
+# FMW installer
+fmw_installer: 'fmw_12.2.1.4.0_wls.jar'
+
+# Memory limits for FMW installer
+jvm_xms: '256m'
+jvm_xmx: '512m'
+
+# Domain
+domain_name: 'demo_domain'
+start_mode: 'prod' # dev (development) or prod (production)
+jta_timeout_sec: 3600 # domain JTA transaction timeout seconds
+
+# WebLogic AdminServer
+admin_server_name: 'AdminServer'
+admin_server_port: 7001
+
+# WebLogic Managed Server Cluster
+ms_cluster: true # true (create) or false (do not create)
+ms_cluster_name: 'demoCluster'
+ms_cluster_address: 'https://demo.local/'
+
+# WebLogic Node Manager
+nm_secure_listener: false
+nm_listen_port: 5556
+
+# WebLogic Managed Server
+ms_port: 7002
+ms_ssl: true # true (use ssl) or false (do not use)
+ms_ssl_port: 7012
+ms_ssl_keystore: true # true (use custom identity) or false (use demo identity)
+ms_ssl_keystore_file: 'demo_keystore.jks'
+ms_ssl_keystore_pass: 'qwaszx'
+ms_ssl_keystore_alias: 'wildcard'
+ms_ssl_trust_pass: 'changeit' # Java cacerts default password
+
+# WebLogic Managed Server settings
+startup_args: true # true (set arguments) or false (do not set)
+startup_args_set: '-Xrs -Xms256M -Xmx512M -Dweblogic.security.SSL.protocolVersion=TLS1 -Dweblogic.wsee.workarea.skipWorkAreaHeader=true'
+ms_wl_plugin: true # WebLogic Plug-In Enabled
+ms_log: true # true (modify) or false (leave default)
+ms_log_size: 50000 # kilobytes
+ms_log_rotate_on_startup: true
+ms_log_file_buffer: 0
+ms_log_extended: true # true (use extended) or false (use default)
+ms_log_extended_fields: 'c-ip date time cs-method cs-uri sc-status bytes time-taken'

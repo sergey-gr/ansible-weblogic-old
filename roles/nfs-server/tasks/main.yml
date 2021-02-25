@@ -1,0 +1,26 @@
+# ==> Install nfs packages
+- name: Install nfs-utils
+  yum: name=nfs-utils state=latest
+
+# ==> Create mountable directory
+- name: Create a mountable directory
+  file: state=directory path={{ nfs_base }} owner={{ oracle_user_id }} group={{ oracle_group_id }}
+
+# ==> Create firewall rule for Node Mnager
+- name: Create firewall rule for nfs server
+  firewalld:
+    zone: public
+    port: '{{ nfs_server_port }}/tcp'
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+# ==> Enable nfs service
+- name: Enable nfs service
+  service: name=nfs-server enabled=yes state=started
+
+- name: Copy 'exports' file
+  template: src=exports.j2 dest=/etc/exports owner=root group=root mode=0644
+    
+- name: NFS apply change configrue
+  shell: systemctl reload nfs;exportfs -a

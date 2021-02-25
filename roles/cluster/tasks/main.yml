@@ -1,0 +1,9 @@
+# ==> Copy scripts
+- name: Copy cluster creation script
+  template: src=create-cluster.py dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create cluster
+- name: Execute cluster creation script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ wls_bin }}/wlst.sh -skipWLSModuleScanning {{ tmp_dir }}/create-cluster.py"

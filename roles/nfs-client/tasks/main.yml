@@ -1,0 +1,16 @@
+# ==> Install nfs packages
+- name: Install nfs-utils
+  yum: name=nfs-utils state=latest
+
+# ==> Create mountable directory
+- name: Create a mountable directory
+  file: state=directory path={{ nfs_base }} owner={{ oracle_user_id }} group={{ oracle_group_id }}
+
+# ==> Mount volume
+- name: Mount share
+  mount:
+    src: "{{ hostvars[groups['wl_admin'][0]]['ansible_ssh_host'] }}:{{ nfs_base }}"
+    path: '{{ nfs_base }}'
+    opts: rw,sync,hard,intr
+    state: mounted
+    fstype: nfs

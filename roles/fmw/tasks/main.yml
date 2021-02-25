@@ -1,0 +1,15 @@
+# ==> Copy weblogic installer
+- name: Copy Middleware Installer
+  copy: src={{ fmw_installer }} dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+- name: Copy file for silent installation
+  template: src=install.rsp dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+- name: Copy OraInst.loc
+  template: src=oraInst.loc dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Run weblogic installer
+- name: Execute Weblogic installer
+  command: "{{ java_home }}/bin/java -Xms{{ jvm_xms }} -Xmx{{ jvm_xmx }} -jar {{ tmp_dir }}/{{ fmw_installer }} -silent -responseFile {{ tmp_dir }}/install.rsp -invPtrLoc {{ tmp_dir }}/oraInst.loc"
+  become: true
+  become_user: '{{ oracle_user }}'

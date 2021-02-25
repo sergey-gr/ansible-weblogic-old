@@ -1,0 +1,3 @@
+roles/fmw/files/*.jar
+roles/jdk/files/*.tar.gz
+roles/managed/files/*.jks

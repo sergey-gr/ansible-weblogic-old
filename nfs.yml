@@ -1,0 +1,28 @@
+# External nfs share
+- name: Setting up external nfs share
+  hosts: cluster
+  become: yes
+  vars_files:
+    - group_vars/nfs_infra.yml
+  roles:
+    - role: nfs-external
+      when: nfs_external_source is sameas true
+
+# Local nfs share
+- name: Setting up local nfs server
+  hosts: wl_admin
+  become: yes
+  vars_files:
+    - group_vars/nfs_infra.yml
+  roles:
+    - role: nfs-server
+      when: nfs_external_source is sameas false
+
+- name: Setting up local nfs share (client)
+  hosts: wl_node
+  become: yes
+  vars_files:
+    - group_vars/nfs_infra.yml
+  roles:
+    - role: nfs-client
+      when: nfs_external_source is sameas false

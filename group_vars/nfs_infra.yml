@@ -1,0 +1,14 @@
+# User/Group ID's from infra.yml
+oracle_user_id: 1100
+oracle_group_id: 1100
+
+# NFS source: [true = external / false = local]
+nfs_external_source: false
+
+# NFS settings for local shared domain
+nfs_base: '/u01'
+nfs_server_port: 2049
+
+# NFS settings for external shared domain
+nfs_external: '192.168.0.110:/demo_share'
+nfs_base_external: '/u01/oracle'

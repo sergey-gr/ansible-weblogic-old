@@ -1,0 +1,43 @@
+# ==> Copy scripts
+- name: Copy domain creation script
+  template: src=create-domain.py dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create domain
+- name: Execute domain creation script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ wls_bin }}/wlst.sh -skipWLSModuleScanning {{ tmp_dir }}/create-domain.py"
+
+# ==> Create admin server security directory
+- name: Create security folder for admin server
+  file: state=directory path={{ domain_home }}/servers/{{ admin_server_name }}/security owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create admin server boot.properties
+- name: Create boot.properties file
+  template: src=boot.properties dest={{ domain_home }}/servers/{{ admin_server_name }}/security owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create firewall rule for admin server
+- name: Create firewall rule for admin server
+  firewalld: zone=public port='{{ admin_server_port }}/tcp' permanent=yes immediate=yes state=enabled
+
+# ==> Create admin server service
+- name: Create admin server systemd service
+  template: src=adminserver.service dest=/etc/systemd/system/ owner=root group=root mode=0644
+
+# ==> Start admin server
+- name: Start admin server service
+  systemd: name=adminserver state=started enabled=yes
+
+# ==> Wait to start
+- name: Wait for admin server to start
+  wait_for: port={{ admin_server_port }} delay=2 timeout=120
+
+# ==> Copy scripts
+- name: Copy domain update script
+  template: src=update-domain.py dest={{ tmp_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Update domain
+- name: Execute domain update script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ wls_bin }}/wlst.sh -skipWLSModuleScanning {{ tmp_dir }}/update-domain.py"

@@ -1,0 +1,12 @@
+# Common paths and names
+oracle_home: '{{ oracle_base }}/middleware/oracle_home'
+domain_home: '{{ oracle_base }}/projects/domains/{{ domain_name }}'
+java_home: '{{ oracle_base }}/java/jdk'
+nm_home: '{{ oracle_base }}/projects/nodemanager'
+
+# Temp directory
+tmp_dir: '/tmp/wls'
+
+# For WLST
+oracle_common: '{{ oracle_home }}/oracle_common'
+wls_bin: '{{ oracle_common }}/common/bin'

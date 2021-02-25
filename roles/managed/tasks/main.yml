@@ -1,0 +1,38 @@
+# ==> Copy scripts
+- name: Copy managed server creation script
+  template: src=create-ms.j2 dest={{ tmp_dir }}/create-ms.py owner={{ oracle_user }} group={{ oracle_group }}
+
+# ==> Create cluster
+- name: Execute managed server creation script
+  become: yes
+  become_user: '{{ oracle_user }}'
+  shell: "{{ wls_bin }}/wlst.sh -skipWLSModuleScanning {{ tmp_dir }}/create-ms.py"
+  throttle: 1
+
+# ==> Create shared cert dir in domain home
+- name: Create shared keystore folder in domain home
+  file: state=directory path='{{ domain_home }}/certs' owner={{ oracle_user }} group={{ oracle_group }}
+  when: ms_ssl is sameas true and
+        ms_ssl_keystore is sameas true and
+        ms_ssl_keystore_file|length > 0
+
+# ==> Copy keystore
+- name: Copy keystore to shared keystore folder
+  copy: src={{ ms_ssl_keystore_file }} dest='{{ domain_home }}/certs' owner={{ oracle_user }} group={{ oracle_group }}
+  args:
+    force: no
+  when: ms_ssl is sameas true and
+        ms_ssl_keystore is sameas true and
+        ms_ssl_keystore_file|length > 0
+
+# ==> Create firewall rule for managed server
+- name: Create firewall rule for managed server
+  firewalld: zone=public port='{{ ms_port }}/tcp' permanent=yes immediate=yes state=enabled
+  when: ms_ssl is sameas false
+
+- name: Create firewall rule for managed server
+  firewalld: zone=public port="{{ item }}/tcp" permanent=yes immediate=yes state=enabled
+  with_items:
+    - "{{ ms_port }}"
+    - "{{ ms_ssl_port }}"
+  when: ms_ssl is sameas true

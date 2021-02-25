@@ -1,0 +1,88 @@
+# Connect to WebLogic admin server
+connect('{{ weblogic_admin }}', '{{ weblogic_admin_pass}}', '{{ hostvars[groups['wl_admin'][0]]['ansible_ssh_host'] }}:{{ admin_server_port }}')
+
+edit()
+startEdit()
+
+# Create the managed Server.
+cd('/')
+cmo.createServer('{{ inventory_hostname }}')
+
+# Set listen address and port
+cd('/Servers/{{ inventory_hostname }}')
+cmo.setListenAddress('{{ ansible_ssh_host }}')
+cmo.setListenPort(int('{{ ms_port }}'))
+
+# Associated with a node manager
+cd('/Servers/{{ inventory_hostname }}')
+cmo.setMachine(getMBean('/Machines/{{ inventory_hostname }}'))
+
+{% if ms_cluster is sameas true %}
+# Associate with a cluster
+cd('/Servers/{{ inventory_hostname }}')
+cmo.setCluster(getMBean('/Clusters/{{ ms_cluster_name }}'))
+{% endif %}
+
+{% if ms_wl_plugin is sameas true %}
+cd('/Servers/{{ inventory_hostname }}')
+cmo.setWeblogicPluginEnabled({{ ms_wl_plugin }})
+{% endif %}
+
+{% if ms_ssl is sameas true %}
+# Enable SSL and set SSL port
+cd('/Servers/{{ inventory_hostname }}/SSL/{{ inventory_hostname }}')
+cmo.setEnabled(true)
+cmo.setListenPort(int('{{ ms_ssl_port}}'))
+{% endif %}
+
+{% if ms_ssl_keystore is sameas true %}
+# Attach keystores Identity and Trust
+cd('/Servers/{{ inventory_hostname }}')
+cmo.setKeyStores('CustomIdentityAndJavaStandardTrust')
+save()
+cmo.setCustomIdentityKeyStoreFileName('certs/{{ ms_ssl_keystore_file }}')
+cmo.setCustomIdentityKeyStoreType('JKS')
+cmo.setCustomIdentityKeyStorePassPhrase('{{ ms_ssl_keystore_pass }}')
+cmo.setJavaStandardTrustKeyStorePassPhrase('{{ ms_ssl_trust_pass }}')
+
+# Attach SSL Identity
+cd('/Servers/{{ inventory_hostname }}/SSL/{{ inventory_hostname }}')
+cmo.setServerPrivateKeyAlias('{{ ms_ssl_keystore_alias}}')
+cmo.setServerPrivateKeyPassPhrase('{{ ms_ssl_keystore_pass }}')
+cmo.setHostnameVerificationIgnored(true)
+{% endif %}
+
+{% if startup_args is sameas true %}
+# Set server startup arguments
+cd('/Servers/{{ inventory_hostname }}/ServerStart/{{ inventory_hostname }}')
+cmo.setArguments('{{ startup_args_set}}')
+{% endif %}
+
+{% if ms_log is sameas true %}
+# Manage logging.General
+cd('/Servers/{{ inventory_hostname }}/Log/{{ inventory_hostname }}')
+cmo.setRotationType('bySize')
+cmo.setFileMinSize({{ ms_log_size }})
+cmo.setNumberOfFilesLimited(false)
+cmo.setRotateLogOnStartup({{ ms_log_rotate_on_startup }})
+cmo.setBufferSizeKB({{ ms_log_file_buffer }})
+
+# Manage logging.HTTP
+cd('/Servers/{{ inventory_hostname }}/WebServer/{{ inventory_hostname }}/WebServerLog/{{ inventory_hostname }}')
+cmo.setRotationType('bySize')
+cmo.setFileMinSize({{ ms_log_size }})
+cmo.setNumberOfFilesLimited(false)
+cmo.setRotateLogOnStartup({{ ms_log_rotate_on_startup }})
+cmo.setBufferSizeKB({{ ms_log_file_buffer }})
+{% if ms_log_extended is sameas true %}
+cmo.setLogFileFormat('extended')
+save()
+cmo.setELFFields('{{ ms_log_extended_fields }}')
+{% endif %}
+{% endif %}
+
+save()
+activate()
+
+disconnect()
+exit()

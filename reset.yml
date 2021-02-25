@@ -1,0 +1,71 @@
+- name: Uninstall WebLogic 12c
+  hosts: cluster
+  vars_files:
+    - group_vars/infra.yml
+    - group_vars/paths.yml
+  tasks:
+    - name: Stop admin server service
+      systemd: name=adminserver state=stopped enabled=no
+      when: inventory_hostname in groups['wl_admin']
+      ignore_errors: yes
+
+    - name: Wait for admin server fully stopped
+      wait_for: port={{ admin_server_port }} delay=2 state=drained timeout=60
+      when: inventory_hostname in groups['wl_admin']
+      ignore_errors: yes
+
+    - name: Remove admin server systemd service file
+      file: path=/etc/systemd/system/adminserver.service state=absent
+      when: inventory_hostname in groups['wl_admin']
+      ignore_errors: yes
+
+    - name: Remove firewall rule for admin server
+      firewalld: zone=public port='{{ admin_server_port }}/tcp' permanent=yes immediate=yes state=disabled
+      when: inventory_hostname in groups['wl_admin']
+
+    - name: Stop node manager service
+      systemd: name=nodemanager state=stopped enabled=no
+      when: inventory_hostname in groups['wl_node']
+      ignore_errors: yes
+
+    - name: Wait for node manager fully stopped
+      wait_for: port={{ nm_listen_port }} host={{ ansible_ssh_host }} delay=2 state=drained timeout=60
+      when: inventory_hostname in groups['wl_node']
+      ignore_errors: yes
+
+    - name: Remove node manager systemd service file
+      file: path=/etc/systemd/system/nodemanager.service state=absent
+      when: inventory_hostname in groups['wl_node']
+      ignore_errors: yes
+
+    - name: Remove firewall rule for node manager
+      firewalld: zone=public port='{{ nm_listen_port }}/tcp' permanent=yes immediate=yes state=disabled
+      when: inventory_hostname in groups['wl_node']
+
+    - name: Remove firewall rule for managed server
+      firewalld: zone=public port='{{ ms_port }}/tcp' permanent=yes immediate=yes state=disabled
+      when: ms_ssl is sameas false and inventory_hostname in groups['wl_node']
+
+    - name: Remove firewall rule for managed server
+      firewalld: zone=public port="{{ item }}/tcp" permanent=yes immediate=yes state=disabled
+      with_items:
+        - "{{ ms_port }}"
+        - "{{ ms_ssl_port }}"
+      when: ms_ssl is sameas true and inventory_hostname in groups['wl_node']
+
+    - name: Remove 'oracle' user
+      user: name={{ oracle_user }} state=absent remove=yes
+
+    - name: Remove 'oinstall' group
+      group: name={{ oracle_group }} state=absent
+
+    - name: Remove WebLogic related directories
+      file: path={{ oracle_base }} state=absent
+      when: inventory_hostname in groups['wl_admin']
+      ignore_errors: yes
+
+    - name: Remove '/tmp' directory
+      file: path={{ tmp_dir }} state=absent
+
+    - name: Reboot machine after uninstall
+      reboot: reboot_timeout=300

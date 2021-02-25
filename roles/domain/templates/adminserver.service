@@ -1,0 +1,17 @@
+[Unit]
+Description=Controls Admin Server Lifecycle
+After=network.target sshd.service
+
+[Service]
+User={{ oracle_user }}
+Group={{ oracle_group }}
+WorkingDirectory={{ domain_home }}
+ExecStart=/bin/bash {{ domain_home }}/bin/startWebLogic.sh
+ExecStop=/bin/bash {{ domain_home }}/bin/stopWebLogic.sh
+Type=simple
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
