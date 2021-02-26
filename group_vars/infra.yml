@@ -17,6 +17,9 @@ fmw_installer: 'fmw_12.2.1.4.0_wls.jar'
 jvm_xms: '256m'
 jvm_xmx: '512m'
 
+# Disable file locking on shared file systems for WLS server (Doc ID 2370584.1)
+disable_file_locking: true
+
 # Domain
 domain_name: 'demo_domain'
 start_mode: 'prod' # dev (development) or prod (production)

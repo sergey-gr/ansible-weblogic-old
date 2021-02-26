@@ -28,6 +28,13 @@ cd('/Servers/{{ inventory_hostname }}')
 cmo.setWeblogicPluginEnabled({{ ms_wl_plugin }})
 {% endif %}
 
+{% if disable_file_locking is sameas true %}
+# (Doc ID 2370584.1)
+cd('/Servers/{{ inventory_hostname }}/DefaultFileStore/{{ inventory_hostname }}')
+cmo.setFileLockingEnabled(false)
+cmo.setSynchronousWritePolicy('Cache-Flush')
+{% endif %}
+
 {% if ms_ssl is sameas true %}
 # Enable SSL and set SSL port
 cd('/Servers/{{ inventory_hostname }}/SSL/{{ inventory_hostname }}')
